@@ -2,11 +2,19 @@
 This package helps to construct confidence matrices for Hi-C replicates
 
 ## Usage
-1. Construct chromatin profile in the area around averaged TADs boundary using correction for replicates confidence:
+1. Generate Confidence matrix for the pair of replicates:
 ```
-average\_tad(file\_names=\[*replicates], k=2, tads\_positions=\[chr,start,end], area_size=10)
+get_confidence(matrix_1,matrix_2,k)
 ```
-2. Generate Hi-C maps in lower resolution using correction for replicates confidence:
+2. Choose the best parameter **k** based on correlation of IS with *window_size*:
 ```
-downsampling(file\_names=\[\*replicates], k=2, multiplier=2, assembly\_v, generate\_files=\[*new\_file\_names])
+choose_k(file_names=[*replicates], max_k = 5, window_size)
+```
+3. Construct chromatin profile in the area around averaged TADs boundary using correction for replicates' confidence:
+```
+average_tad(file_names=[*replicates], k, tads_positions=[chr,start,end...], area_size)
+```
+4. Generate Hi-C maps in lower resolution using correction for replicates' confidence:
+```
+downsampling(file_names=[*replicates], k=2, multiplier=2, assembly_version, generate_files=[*new_files_names])
 ```
