@@ -42,7 +42,7 @@ def kth_diag_indices(a, k):
         return rows, cols
 
 def calc_ins(confidence_mtx,i,window_size,mtx):
-    return np.nansum((confidence_mtx[i-window_size:i,i+1:i+window_size+1]/np.nansum(confidence_mtx[i-window_size:i,i+1:i+window_size+1])) * mtx[i-window_size:i,i+1:i+window_size+1])
+    return np.nansum(mtx[i-window_size:i,i+1:i+window_size+1]/np.nansum(confidence_mtx[i-window_size:i,i+1:i+window_size+1]))
 
 def extract_tad(mtx, tad, bin_size, area_size, border = 'Left', confidence=False):
         start = tad.Start//bin_size
@@ -84,23 +84,14 @@ def downsample(file_name,
     multiplier,
     digitized,
     contact_type,
-    confidence
+    confidence,
+    regions=None
 ):
     digitized_df, name_ = digitized
-    if regions is None:
-        regions = [
+    regions = [
             (chrom, df.start.min(), df.end.max())
             for chrom, df in digitized_df.groupby("chrom")
-        ]
-    else:
-        regions = [bioframe.parse_region(reg) for reg in regions]
-    digitized_tracks = {
-        reg: bioframe.bedslice(digitized_df.groupby("chrom"), reg[0], reg[1], reg[2])[
-            name_
-        ]
-        for reg in regions
-    }
-    
+              ]
     f = open(file_name,'w')
     n = 0
     k = 0

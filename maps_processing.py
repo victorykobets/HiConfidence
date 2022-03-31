@@ -7,6 +7,15 @@ import bioframe
 import cooltools
 import cooltools.eigdecomp
 import cooltools.expected
+# Delete
+'''
+from confidence_calculation import *
+from maps_processing import *
+file_names = ['/windows/Skoltech/Data/distiller2/Cur1.dm3.mapq_30.1000.mcool::/resolutions/20000','/windows/Skoltech/Data/distiller2/Cur2.dm3.mapq_30.1000.mcool::/resolutions/20000']
+k = 2
+area_size = 8
+mtx['rep_1'], regions, bin_size = download_matrix(file_names[0])
+'''
 
 def average_tad(file_names, k, tads_positions, area_size):
 	mtx = {}
@@ -34,7 +43,7 @@ def average_tad(file_names, k, tads_positions, area_size):
 		avg_tad[rep] = np.nansum(confidence_areas * tads_areas,axis=0)
 	return avg_tad
 
-def choose_k(file_names, max_k = 20, window_size = 8):
+def choose_k(file_names, max_k = 5, window_size = 5):
 	correlations = replicates_correlation(window_size, max_k, file_names)
 	k = np.array(correlations).argmax()+1
 	return k
@@ -50,13 +59,18 @@ def replicates_correlation(window_size, max_k, file_names):
 			ins[rep] = []
 			for chrm in regions:
 				confidence_mtx = get_confidence(mtx['rep_1'](chrm,chrm),mtx['rep_2'](chrm,chrm),k)
-				ins[rep] += [calc_ins(confidence_mtx,i,window_size,mtx[rep](chrm,chrm)) for i in range(window_size,mtx[rep](chrm,chrm).shape[0])]
+				norm_mtx = confidence_mtx*mtx[rep](chrm,chrm)
+				ins[rep] += [calc_ins(confidence_mtx,i,window_size,norm_mtx) for i in range(window_size,norm_mtx.shape[0])]
 			ins[rep] = (ins[rep] - np.nanmean(ins[rep]))/np.nanstd(ins[rep])
 			ins[rep] = np.nan_to_num(ins[rep])
 		cor += [spearmanr(ins['rep_1'].flatten(),ins['rep_2'].flatten())[0]]
 	return cor
 
 def downsampling(file_names, k, multiplier, assembly_v, generate_files):
+	Q_LO = 0.025 # ignore 2.5% of genomic bins with the lowest E1 values
+	Q_HI = 0.975 # ignore 2.5% of genomic bins with the highest E1 values
+	N_GROUPS = 11 # divide remaining 95% of the genome into 11 equisized groups
+	q_edges = np.linspace(Q_LO, Q_HI, N_GROUPS+1)
 	c = []
 	c += [cooler.Cooler(file_names[0])]
 	c += [cooler.Cooler(file_names[1])]
@@ -101,20 +115,18 @@ def downsampling(file_names, k, multiplier, assembly_v, generate_files):
 	getmatrix = []
 	getmatrix += [cooltools.saddle.make_cis_obsexp_fetcher(c[0], (expected[0], 'balanced.avg'))]
 	getmatrix += [cooltools.saddle.make_cis_obsexp_fetcher(c[1], (expected[1], 'balanced.avg'))]
-	
-	confidence = {reg[0] : get_confidence(getmatrix(reg,reg),getmatrix_r(reg,reg),k) for reg in regions}
-					
+	confidence = {reg[0] : get_confidence(getmatrix[0](reg,reg),getmatrix[1](reg,reg),k) for reg in regions}
 	downsample(generate_files[0],
 				f[0],
 				bin_size, multiplier,
 				(digitized[0], 'E1' + '.d'),
 				contact_type='cis',
-				sign = confidence)
+				confidence = confidence)
 	downsample(generate_files[1],
 				f[1],
 				bin_size, multiplier,
 				(digitized[1], 'E1' + '.d'),
 				contact_type='cis',
-				sign = confidence)
+				confidence = confidence)
 	
 
