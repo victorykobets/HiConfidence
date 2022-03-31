@@ -7,15 +7,7 @@ import bioframe
 import cooltools
 import cooltools.eigdecomp
 import cooltools.expected
-# Delete
-'''
-from confidence_calculation import *
-from maps_processing import *
-file_names = ['/windows/Skoltech/Data/distiller2/Cur1.dm3.mapq_30.1000.mcool::/resolutions/20000','/windows/Skoltech/Data/distiller2/Cur2.dm3.mapq_30.1000.mcool::/resolutions/20000']
-k = 2
-area_size = 8
-mtx['rep_1'], regions, bin_size = download_matrix(file_names[0])
-'''
+
 
 def average_tad(file_names, k, tads_positions, area_size):
 	mtx = {}
@@ -67,20 +59,23 @@ def replicates_correlation(window_size, max_k, file_names):
 	return cor
 
 def downsampling(file_names, k, multiplier, assembly_v, generate_files):
-	Q_LO = 0.025 # ignore 2.5% of genomic bins with the lowest E1 values
-	Q_HI = 0.975 # ignore 2.5% of genomic bins with the highest E1 values
-	N_GROUPS = 11 # divide remaining 95% of the genome into 11 equisized groups
+	Q_LO = 0.025 
+	Q_HI = 0.975 
+	N_GROUPS = 11 
 	q_edges = np.linspace(Q_LO, Q_HI, N_GROUPS+1)
+
 	c = []
 	c += [cooler.Cooler(file_names[0])]
 	c += [cooler.Cooler(file_names[1])]
 	f = []
-	f += [c[0].matrix(balance=True)] #
-	f += [c[1].matrix(balance=True)] #
+	f += [c[0].matrix(balance=True)] 
+	f += [c[1].matrix(balance=True)] 
+
 	bins = c[0].bins()[:]
 	bin_size = c[0].binsize
 	genecov = bioframe.tools.frac_gene_coverage(bins, assembly_v)
 	regions = [(chrom, 0, c[0].chromsizes[chrom]) for chrom in c[0].chromnames]
+	
 	cis_eigs = []	
 	cis_eigs += [cooltools.eigdecomp.cooler_cis_eig(
 			c[0],
@@ -98,24 +93,23 @@ def downsampling(file_names, k, multiplier, assembly_v, generate_files):
 	group_E1_bounds = []
 	group_E1_bounds += [cooltools.saddle.quantile(cis_eigs[0][1]['E1'], q_edges)]
 	group_E1_bounds += [cooltools.saddle.quantile(cis_eigs[1][1]['E1'], q_edges)]
-	# Assign the group to each genomic bin according to its E1, i.e. "digitize" E1.
+
 	digitized = []
 	d = cooltools.saddle.digitize_track(group_E1_bounds[0],track=(cis_eigs[0][1], 'E1'))
 	digitized += [d[0]]
 	d = cooltools.saddle.digitize_track(group_E1_bounds[1],track=(cis_eigs[1][1], 'E1'))
 	digitized += [d[0]]
-	# Calculate the decay of contact frequency with distance (i.e. "expected")
-	# for each chromosome.
+
 	expected = []	
 	expected += [cooltools.expected.cis_expected(c[0], regions, use_dask=True)]
 	expected += [cooltools.expected.cis_expected(c[1], regions, use_dask=True)]
 
-	# Make a function that returns observed/expected dense matrix of an arbitrary
-	# region of the Hi-C map.
 	getmatrix = []
 	getmatrix += [cooltools.saddle.make_cis_obsexp_fetcher(c[0], (expected[0], 'balanced.avg'))]
 	getmatrix += [cooltools.saddle.make_cis_obsexp_fetcher(c[1], (expected[1], 'balanced.avg'))]
+
 	confidence = {reg[0] : get_confidence(getmatrix[0](reg,reg),getmatrix[1](reg,reg),k) for reg in regions}
+	
 	downsample(generate_files[0],
 				f[0],
 				bin_size, multiplier,

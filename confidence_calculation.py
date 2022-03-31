@@ -15,11 +15,7 @@ def download_matrix(file_name):
     bins = c.bins()[:]
     bin_size = c.binsize
     regions = [(chrom, 0, c.chromsizes[chrom]) for chrom in c.chromnames]
-    # Calculate the decay of contact frequency with distance (i.e. "expected")
-    # for each chromosome.
     expected = cooltools.expected.cis_expected(c, regions, use_dask=True)
-    # Make a function that returns observed/expected dense matrix of an arbitrary
-    # region of the Hi-C map.
     getmatrix = cooltools.saddle.make_cis_obsexp_fetcher(c, (expected, 'balanced.avg'))
     return getmatrix, regions, bin_size
 
@@ -27,7 +23,6 @@ def get_confidence(df0,df1,k):
     mask = np.nanmean(np.array([df0,df1]),axis=0) == 0
     confidence = 1/(((np.abs(df1-df0))/(np.nanmean(np.array([df0,df1]),axis=0) + mask)+1)**k)
     confidence[mask] = 0
-    # Делаем значимость диагонали равной 0
     for k in range(-1,2):
         confidence[kth_diag_indices(confidence, k=k)] = 0
     return confidence
