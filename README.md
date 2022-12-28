@@ -1,4 +1,4 @@
-# MuReSiE
+# HiConfidence
 This package helps to construct confidence matrices for Hi-C replicates
 
 ## Usage
