@@ -1,13 +1,10 @@
 from confidence_calculation import *
-import pandas as pd
 import numpy as np
-from scipy.stats import spearmanr
 import cooler
-import bioframe
 import cooltools
-import cooltools.eigdecomp
 import cooltools.expected
-
+import warnings
+warnings.filterwarnings("ignore")
 
 def average_tad(file_names, k_parameter, tads_positions, area_size):
     ''' Function for calculation of average picture of Hi-C signal around tads boundaries 

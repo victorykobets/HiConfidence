@@ -1,10 +1,7 @@
-import pandas as pd
 import numpy as np
 from scipy.stats import spearmanr
 import cooler
-import bioframe
 import cooltools
-import cooltools.eigdecomp
 import cooltools.expected
 import cooltools.saddle
 import warnings
