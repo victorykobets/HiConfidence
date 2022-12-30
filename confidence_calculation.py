@@ -75,7 +75,7 @@ def calculate_confidence(mtx1,mtx2,k_parameter):
     return confidence
 
 def replicates_correlation(window_size, max_k, file_names):
-    ''' Correlation of insulation scores of replicates after MuReSiE normalization 
+    ''' Correlation of insulation scores of replicates after HiConfidence normalization 
 
         Parameters
         ----------
@@ -105,7 +105,7 @@ def replicates_correlation(window_size, max_k, file_names):
         for rep in ['rep_1','rep_2']:
             insulations[rep] = []
             for chrm in regions:
-                # For every chromosome MuReSiE normalization of original matrix
+                # For every chromosome HiConfidence normalization of original matrix
                 confidence_mtx = calculate_confidence(mtx['rep_1'](chrm,chrm),mtx['rep_2'](chrm,chrm),k)
                 norm_mtx = confidence_mtx*mtx[rep](chrm,chrm)
                 # Calculation of insulation score for normalized map

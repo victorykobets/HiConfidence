@@ -6,7 +6,7 @@ This package helps to construct confidence matrices for Hi-C replicates
 ```
 calculate_confidence(Hi-C_matrix_rep1,Hi-C_matrix_rep2,k_parameter)
 ```
-2. Choose the best parameter **k** based on correlation of IS with *window_size*:
+2. Choose the best parameter **k** based on correlation of IS with **window_size**:
 ```
 choose_k(Hi-C_reps_file_names)
 ```
